@@ -8,9 +8,34 @@ use App\Mail\ConfirmSubscriptionMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
+//adicionado
+use App\Mail\AllPostsNewsletter;
+use App\Models\Post;
 
 class NewsletterController extends Controller
 {
+
+    // extra
+
+
+    public function sendAllPostsTest()
+    {
+        $posts = Post::where('published', true)
+            ->orderBy('created_at')
+            ->get();
+
+        Mail::to('teste@mailpit.local')
+            ->send(new AllPostsNewsletter($posts));
+
+        return response()->json([
+            'message' => 'Newsletter enviada para o Mailpit',
+            'posts' => $posts->count(),
+        ]);
+    }
+
+
+
+    ///função que funciona
     public function subscribe(Request $request)
     {
          $request->validate([

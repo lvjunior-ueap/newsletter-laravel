@@ -1,22 +1,50 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\NewsletterController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
+/*
+|--------------------------------------------------------------------------
+| Frontend - Posts
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/', [PostController::class, 'index'])->name('home');
+
+Route::get('/post/{slug}', [PostController::class, 'show'])
+    ->name('post.show');
+
+/*
+|--------------------------------------------------------------------------
+| Newsletter
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('newsletter')->group(function () {
+    Route::get('/', [NewsletterController::class, 'form'])
+        ->name('newsletter.form');
+
+    Route::post('/subscribe', [NewsletterController::class, 'subscribe'])
+        ->name('newsletter.subscribe');
+
+    Route::get('/confirm/{token}', [NewsletterController::class, 'confirm'])
+        ->name('newsletter.confirm');
+
+    Route::get('/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])
+        ->name('newsletter.unsubscribe');
 });
 
-//adicionado teste
 
+//teste send all
+Route::get('/newsletter/test/send-all', [
+    NewsletterController::class,
+    'sendAllPostsTest'
+]);
 
-Route::get('/newsletter', function () {
-    return view('newsletter');
-});
+//etapa 2
+Route::get('/admin/posts/create', [PostController::class, 'create']);
+Route::post('/admin/posts', [PostController::class, 'store']);
 
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
-    ->name('newsletter.subscribe');
-
-Route::get('/newsletter/confirm/{token}', [NewsletterController::class, 'confirm'])
-    ->name('newsletter.confirm');
 
