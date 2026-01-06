@@ -19,10 +19,12 @@ return [
     ],
 
     // NEWSLETTER
-    'sender' => [
-        'api_key' => env('SENDER_API_KEY'),
-        'base_url' => env('SENDER_BASE_URL'),
+    'brevo' => [
+        'key' => env('BREVO_API_KEY'),
+        'test_email' => env('BREVO_TEST_EMAIL'),
     ],
+
+  
 
 
     'resend' => [

@@ -2,37 +2,56 @@
 
 namespace App\Services;
 
+use App\Models\Post;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SenderService
 {
-    protected string $baseUrl;
     protected string $apiKey;
+    protected string $baseUrl = 'https://api.sender.net/v2';
 
     public function __construct()
     {
-        $this->baseUrl = config('services.sender.base_url');
-        $this->apiKey  = config('services.sender.api_key');
+        $this->apiKey = config('services.sender.api_key');
     }
 
-    protected function request()
+    /**
+     * Envia email de novo post publicado
+     */
+    public function sendNewPost(Post $post, string $toEmail): bool
     {
-        return Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'Accept'        => 'application/json',
-            'Content-Type'  => 'application/json',
+        $response = Http::withToken($this->apiKey)
+            ->post($this->baseUrl . '/email', [
+                'from' => [
+                    'email' => config('mail.from.address'),
+                    'name'  => config('mail.from.name'),
+                ],
+                'to' => [
+                    [
+                        'email' => $toEmail,
+                    ]
+                ],
+                'subject' => 'Novo post publicado: ' . $post->title,
+                'html' => view('emails.api.new-post', [
+                    'post' => $post
+                ])->render(),
+            ]);
+
+       if ($response->failed()) {
+            Log::error('Sender API error', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return false;
+        }
+
+        Log::info('Sender API response', [
+            'status' => $response->status(),
+            'body' => $response->json(),
         ]);
-    }
 
-    public function addSubscriber(string $email)
-    {
-        return $this->request()->post("{$this->baseUrl}/subscribers", [
-            'email' => $email,
-        ]);
-    }
-
-    public function removeSubscriber(string $email)
-    {
-        return $this->request()->delete("{$this->baseUrl}/subscribers/{$email}");
+        return true;
     }
 }
