@@ -10,6 +10,9 @@ use App\Mail\AllPostsNewsletter;
 //novo
 use App\Mail\NewPostPublishedMail;
 
+//senderservice
+use App\Services\SenderService;
+
 
 use App\Models\Post;
 
@@ -42,7 +45,7 @@ class PostController extends Controller
         return view('posts.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, SenderService $sender)
     {
         $data = $request->validate([
             'title' => 'required|string',
@@ -57,18 +60,11 @@ class PostController extends Controller
             'published' => true,
         ]);
 
-        // 🔥 dispara email de teste
-        Mail::to('teste@mailpit.local')
-
-            //OLD 
-           //->send(new AllPostsNewsletter(
-             //   Post::where('published', true)->get()
-           // ));
-
-           //comportamento correto: 
-           ->send(new NewPostPublishedMail($post));
+        // 🚀 envio via API Sender
+        $sender->sendNewPost($post, 'guiapq@gmail.com');
 
         return redirect('/')
             ->with('success', 'Post criado e email enviado!');
     }
+    
 }

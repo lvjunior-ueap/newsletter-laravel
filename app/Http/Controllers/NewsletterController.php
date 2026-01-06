@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\AllPostsNewsletter;
 use App\Models\Post;
 
+use App\Services\BrevoService;
+
 class NewsletterController extends Controller
 {
 
@@ -92,5 +94,31 @@ class NewsletterController extends Controller
         return redirect('/newsletter')
             ->with('success', 'Inscrição confirmada com sucesso!');
     }
+
+
+
+
+//METODO DE TESTE BREVO
+    public function brevoTest(BrevoService $brevo)
+    {
+        $email = config('services.brevo.test_email');
+
+        $contact = $brevo->createContact($email, [
+            2 // ID da lista no Brevo (ajuste)
+        ]);
+
+        $mail = $brevo->sendTestEmail($email);
+
+        return response()->json([
+            'contact' => $contact->json(),
+            'email' => $mail->json(),
+        ]);
+    }
+
+
+
+
+
+
 
 }

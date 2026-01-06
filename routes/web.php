@@ -48,3 +48,10 @@ Route::get('/admin/posts/create', [PostController::class, 'create']);
 Route::post('/admin/posts', [PostController::class, 'store']);
 
 
+// TESTE BREVO
+Route::get('/newsletter/test/brevo', [
+    NewsletterController::class,
+    'brevoTest'
+]);
+
+
