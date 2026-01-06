@@ -1,60 +1,154 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📬 Laravel Newsletter Toy Project
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Este repositório é um **toy project em Laravel** criado com o objetivo de **estudar, testar e comparar diferentes abordagens de envio de e‑mail** em aplicações web reais.
 
-## About Laravel
+O projeto simula um **sistema simples de notícias/blog**, onde a publicação de um novo post pode disparar e‑mails para uma newsletter, utilizando **duas metodologias distintas**:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- 📦 **Envio local (Mailpit)** – para desenvolvimento
+- ☁️ **Envio real via API (Brevo / Sendinblue)** – para ambiente próximo de produção
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+> ⚠️ Este projeto **não é um produto final**, e sim um laboratório prático de arquitetura, integrações e boas práticas.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🎯 Objetivos do projeto
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- Explorar diferentes **estratégias de envio de e‑mail** no Laravel
+- Comparar **envio local vs envio via API externa**
+- Aplicar boas práticas de arquitetura (Events, Listeners, Services)
+- Manter controllers desacoplados de regras de envio
+- Simular um fluxo real de **newsletter baseada em conteúdo**
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🧱 Arquitetura geral
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Quando uma nova notícia é publicada:
 
-### Premium Partners
+```
+PostController
+   ↓
+Event: PostPublished
+   ↓
+Listener: SendPostToNewsletter
+   ↓
+Service: BrevoService (ou Mail local)
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+O controller **não envia e‑mails diretamente**. Toda a lógica de notificação fica isolada em **Events + Listeners**, permitindo trocar o provedor de e‑mail sem alterar o domínio da aplicação.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## ✉️ Metodologias de envio de e‑mail
 
-## Code of Conduct
+### 1️⃣ Envio local com Mailpit (desenvolvimento)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Utilizado para desenvolvimento local, sem envio real de e‑mails.
 
-## Security Vulnerabilities
+**Características:**
+- Nenhum e‑mail sai para a internet
+- Ideal para testes rápidos
+- Visualização via interface web
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Configuração típica:**
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+```
 
-## License
+A interface do Mailpit fica disponível em:
+```
+http://localhost:8025
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# newsletter-laravel
+---
+
+### 2️⃣ Envio real via API (Brevo)
+
+Integração com o **Brevo (antigo Sendinblue)** usando API HTTP para envio de e‑mails transacionais.
+
+**Características:**
+- Envio real de e‑mails
+- Domínio autenticado (SPF / DKIM)
+- Melhor controle de entregabilidade
+- Integração desacoplada do Laravel Mail
+
+O envio ocorre através de um service dedicado:
+
+```
+app/Services/BrevoService.php
+```
+
+Utilizando chamadas HTTP para a API oficial do Brevo.
+
+---
+
+## 🔔 Fluxo de newsletter
+
+- Um post é criado no painel administrativo
+- O evento `PostPublished` é disparado
+- Um listener decide se deve notificar a newsletter
+- O e‑mail é enviado:
+  - localmente (Mailpit), ou
+  - via API do Brevo
+
+Atualmente, o envio é feito para um **e‑mail de teste**, configurado por ambiente.
+
+---
+
+## 🧪 Status atual
+
+✔️ CRUD básico de posts
+✔️ Publicação de notícias
+✔️ Event + Listener funcionando
+✔️ Integração com Brevo via API
+✔️ Envio confirmado no dashboard do Brevo
+
+Próximas evoluções possíveis:
+- Envio em massa para inscritos reais
+- Uso de filas (Queues)
+- Templates transacionais
+- Double opt‑in
+- Agendamento de newsletters
+
+---
+
+## 🚧 O que este projeto **não é**
+
+- ❌ Não é um sistema de newsletter completo
+- ❌ Não é focado em UI
+- ❌ Não é pronto para produção sem ajustes
+
+Ele existe **apenas para estudo, testes e aprendizado prático**.
+
+---
+
+## 🛠️ Tecnologias utilizadas
+
+- Laravel
+- PHP
+- Brevo API (Sendinblue)
+- Mailpit
+- MySQL / SQLite (dependendo do ambiente)
+
+---
+
+## 🧠 Motivação
+
+Este projeto foi criado para entender **na prática**:
+
+- Quando usar o Mail do Laravel
+- Quando usar APIs externas
+- Como desacoplar envio de e‑mail da lógica de negócio
+- Como preparar um projeto para crescer sem refatorações dolorosas
+
+---
+
+## 📄 Licença
+
+Projeto de estudo. Use, adapte e modifique livremente.
+
