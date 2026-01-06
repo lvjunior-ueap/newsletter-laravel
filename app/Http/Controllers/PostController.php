@@ -1,19 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-//mais
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\AllPostsNewsletter;
-
-//novo
-use App\Mail\NewPostPublishedMail;
-
-//senderservice
-use App\Services\SenderService;
-
-
+use App\Events\PostPublished;
 use App\Models\Post;
 
 class PostController extends Controller
@@ -36,16 +27,13 @@ class PostController extends Controller
         return view('posts.show', compact('post'));
     }
 
-
-
-    //adicionando para etapa2
-
+    // etapa 2
     public function create()
     {
         return view('posts.create');
     }
 
-    public function store(Request $request, SenderService $sender)
+    public function store(Request $request)
     {
         $data = $request->validate([
             'title' => 'required|string',
@@ -60,11 +48,9 @@ class PostController extends Controller
             'published' => true,
         ]);
 
-        // 🚀 envio via API Sender
-        $sender->sendNewPost($post, 'guiapq@gmail.com');
+        // 🔔 dispara evento (email fica fora do controller)
+        event(new PostPublished($post));
 
-        return redirect('/')
-            ->with('success', 'Post criado e email enviado!');
+        return redirect()->route('home');
     }
-    
 }

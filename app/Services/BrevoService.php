@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+
 use Illuminate\Support\Facades\Http;
+use App\Models\Post; 
 
 class BrevoService
 {
@@ -42,4 +44,33 @@ class BrevoService
                 'htmlContent' => '<p>Email enviado com <b>Laravel + Brevo</b> 🚀</p>',
             ]);
     }
+
+
+
+    //POST EMAIL
+
+    public function sendPostEmail(string $to, Post $post)
+    {
+        $url = url("/post/{$post->slug}");
+
+        return Http::withHeaders($this->headers())
+            ->post("{$this->baseUrl}/smtp/email", [
+                'sender' => [
+                    'name' => 'LV Junior',
+                    'email' => 'newsletter@lvjunior.xyz',
+                ],
+                'to' => [
+                    ['email' => $to],
+                ],
+                'subject' => "Nova notícia: {$post->title}",
+                'htmlContent' => "
+                    <h2>{$post->title}</h2>
+                    <p>{$post->excerpt}</p>
+                    <p>
+                        <a href='{$url}'>Ler notícia</a>
+                    </p>
+                ",
+            ]);
+    }
+    
 }
