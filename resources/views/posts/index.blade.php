@@ -1,5 +1,11 @@
 @extends('layouts.app')
 
+<link rel="stylesheet" href="{{ asset('css/newsletter.css') }}">
+<script src="{{ asset('js/newsletter.js') }}" defer></script>
+
+
+
+
 @section('title', 'Últimos posts')
 
 @section('content')
