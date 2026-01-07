@@ -29,6 +29,22 @@ class BrevoService
             ]);
     }
 
+    //função nova...
+    public function createOrUpdateContact(
+        string $email,
+        array $attributes = [],
+        array $listIds = []
+    ): void {
+        Http::withHeaders([
+            'api-key' => config('services.brevo.api_key'),
+        ])->post('https://api.brevo.com/v3/contacts', [
+            'email' => $email,
+            'attributes' => $attributes,
+            'listIds' => $listIds,
+            'updateEnabled' => true,
+        ])->throw();
+    }
+
     public function sendTestEmail(string $to)
     {
         return Http::withHeaders($this->headers())

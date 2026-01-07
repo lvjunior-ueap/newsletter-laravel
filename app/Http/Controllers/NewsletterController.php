@@ -98,7 +98,7 @@ class NewsletterController extends Controller
 
 
 
-//METODO DE TESTE BREVO
+    //METODO DE TESTE BREVO
     public function brevoTest(BrevoService $brevo)
     {
         $email = config('services.brevo.test_email');
@@ -113,6 +113,19 @@ class NewsletterController extends Controller
             'contact' => $contact->json(),
             'email' => $mail->json(),
         ]);
+    }
+
+
+    //adicionar subscriber
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        event(new ContatoInscritoNewsletter($data['email']));
+
+        return back()->with('success', 'Inscrição realizada com sucesso!');
     }
 
 
