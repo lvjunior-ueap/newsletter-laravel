@@ -14,6 +14,13 @@ use App\Models\Post;
 
 use App\Services\BrevoService;
 
+//logs
+use Illuminate\Support\Facades\Log;
+use App\Events\NewsletterSubscribed;
+
+//ajuste para melhorar
+use Illuminate\Support\Facades\Cache;
+
 class NewsletterController extends Controller
 {
 
@@ -37,41 +44,43 @@ class NewsletterController extends Controller
 
 
 
-    ///função que funciona
+    //para funcionamento com api do brevo
     public function subscribe(Request $request)
     {
-         $request->validate([
-            'email' => 'required|email|unique:subscribers,email',
-        ]);
-
-        $token = Str::uuid();
-
-        $subscriber = Subscriber::create([
+        Log::info('[Newsletter] Controller chamado', [
             'email' => $request->email,
-            'token' => $token,
-            'active' => false,
         ]);
 
-        $url = route('newsletter.confirm', $token);
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
 
-        Mail::to($subscriber->email)
-            ->queue(new ConfirmSubscriptionMail($url));
+        //adicionada key como proteção...
 
+        $key = 'newsletter:' . md5($data['email']);
 
-        // AddSubscriberToSender::dispatch($request->email);
-
-
-        //API ou WEB
-        if ($request->expectsJson()) {
+        if (Cache::has($key)) {
             return response()->json([
-                'message' => 'Inscrição realizada com sucesso!'
-            ]);
+                'message' => 'Este e-mail já foi processado recentemente',
+            ], 200);
         }
 
-        return redirect('/newsletter')
-            ->with('success', 'Inscrição realizada com sucesso!');
+        Cache::put($key, true, now()->addMinutes(5));
 
+        // código continua normalmente...
+
+        event(new NewsletterSubscribed($data['email']));
+
+        Log::info('[Newsletter] Event disparado', [
+            'email' => $data['email'],
+        ]);
+
+        return response()->json([
+            'message' => 'Inscrição realizada com sucesso',
+        ]);
     }
+
+
 
 
     public function confirm(string $token)
@@ -127,11 +136,5 @@ class NewsletterController extends Controller
 
         return back()->with('success', 'Inscrição realizada com sucesso!');
     }
-
-
-
-
-
-
 
 }

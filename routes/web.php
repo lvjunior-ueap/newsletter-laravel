@@ -2,7 +2,7 @@
 
 
 use App\Http\Controllers\PostController;
-use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\Api\NewsletterController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -53,5 +53,12 @@ Route::get('/newsletter/test/brevo', [
     NewsletterController::class,
     'brevoTest'
 ]);
+
+Route::prefix('api')->group(function () {
+
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
+        ->name('api.newsletter.subscribe');
+
+});
 
 

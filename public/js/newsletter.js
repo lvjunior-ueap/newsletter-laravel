@@ -4,11 +4,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.getElementById('close-newsletter-modal');
     const form = document.getElementById('newsletter-form');
     const feedback = document.getElementById('newsletter-feedback');
+    const emailInput = document.getElementById('newsletter-email');
 
-    if (!modal || !openBtn) return;
+    if (!modal || !openBtn || !form) return;
+
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : null;
+
+    /* =========================
+       ABRIR / FECHAR MODAL
+    ========================== */
 
     openBtn.addEventListener('click', () => {
         modal.classList.remove('hidden');
+        emailInput?.focus();
     });
 
     modal.querySelector('.modal-backdrop')
@@ -18,40 +27,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeModal() {
         modal.classList.add('hidden');
-        feedback.innerHTML = '';
+        feedback.textContent = '';
         form.reset();
     }
+
+    /* =========================
+       SUBMIT DO FORMULÁRIO
+    ========================== */
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('newsletter-email').value;
-        feedback.innerHTML = 'Enviando...';
+        const email = emailInput.value.trim();
+
+        //ajeitando o botão...
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+
+        if (!email) {
+            feedback.textContent = '❌ Informe um e-mail válido';
+            return;
+        }
+
+        feedback.textContent = 'Enviando...';
 
         try {
             const response = await fetch('/api/newsletter/subscribe', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document
-                        .querySelector('meta[name="csrf-token"]')
-                        .content
+                    'Accept': 'application/json',
+                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken })
                 },
                 body: JSON.stringify({ email })
             });
 
-            const data = await response.json();
+            let data = null;
+
+            try {
+                data = await response.json();
+            } catch {
+                throw new Error('Resposta inválida do servidor');
+            }
 
             if (!response.ok) {
                 throw new Error(data.message || 'Erro ao inscrever');
             }
 
-            feedback.innerHTML = '✅ Inscrição realizada com sucesso';
+            feedback.textContent = '✅ Inscrição realizada com sucesso';
 
             setTimeout(closeModal, 1500);
 
         } catch (err) {
-            feedback.innerHTML = '❌ ' + err.message;
+            feedback.textContent = '❌ ' + err.message;
         }
+
+        //resetando o botão
+        submitButton.disabled = false;
+        
     });
 });

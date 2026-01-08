@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Models\Post; 
 
@@ -35,14 +35,29 @@ class BrevoService
         array $attributes = [],
         array $listIds = []
     ): void {
-        Http::withHeaders([
-            'api-key' => config('services.brevo.api_key'),
+
+        Log::info('[Brevo] Enviando contato', [
+            'email' => $email,
+            'listIds' => $listIds,
+            'attributes' => $attributes,
+        ]);
+
+        $response = Http::withHeaders([
+            'api-key' => config('brevo.api_key'),
+            'Accept' => 'application/json',
         ])->post('https://api.brevo.com/v3/contacts', [
             'email' => $email,
             'attributes' => $attributes,
             'listIds' => $listIds,
             'updateEnabled' => true,
-        ])->throw();
+        ]);
+
+        Log::info('[Brevo] Resposta', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        $response->throw();
     }
 
     public function sendTestEmail(string $to)

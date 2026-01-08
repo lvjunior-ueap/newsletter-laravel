@@ -12,5 +12,8 @@ class EventServiceProvider extends ServiceProvider
         PostPublished::class => [
             SendPostToNewsletter::class,
         ],
+         \App\Events\NewsletterSubscribed::class => [
+        \App\Listeners\SendNewsletterContactToBrevo::class,
+        ],
     ];
 }
